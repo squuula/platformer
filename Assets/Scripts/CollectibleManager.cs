@@ -15,6 +15,8 @@ public class CollectibleManager : MonoBehaviour
     int totalCollectibles;
     int collected;
 
+    public bool AllCollected => collected >= totalCollectibles && totalCollectibles > 0;
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -23,15 +25,15 @@ public class CollectibleManager : MonoBehaviour
 
     void Start()
     {
-        // Считаем все коллектиблы на сцене
         totalCollectibles = FindObjectsByType<Collectible>(FindObjectsSortMode.None).Length;
         Debug.Log($"Всего коллектиблов: {totalCollectibles}");
+        FindObjectOfType<HUD>()?.UpdateEmeralds(collected, totalCollectibles);
     }
 
     public void OnCollect()
     {
         collected++;
-        Debug.Log($"Собрано: {collected} / {totalCollectibles}");
+        FindObjectOfType<HUD>()?.UpdateEmeralds(collected, totalCollectibles);
 
         if (collected >= totalCollectibles)
         {

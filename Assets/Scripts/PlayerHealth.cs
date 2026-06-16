@@ -1,26 +1,34 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Events")]
-    public UnityEvent onDeath; // подписываем GameManager в Inspector
+    public UnityEvent onDeath;
+
+    [Header("Settings")]
+    public float deathDelay = 1.5f;
 
     bool isDead = false;
 
-    // Вызывается стрелой/пулей или триггером ямы
     public void Die()
     {
         if (isDead) return;
         isDead = true;
 
-        // Можно добавить анимацию / звук здесь
         Debug.Log("Player died!");
-
-        onDeath.Invoke(); // → GameManager.RestartLevel()
+        GetComponent<PlayerController>()?.PlayDeath();
+        FindObjectOfType<HUD>()?.AddDeath();
+        StartCoroutine(DeathRoutine());
     }
 
-    // Триггер ямы — объект с тегом "DeathZone" и Is Trigger = true
+    IEnumerator DeathRoutine()
+    {
+        yield return new WaitForSeconds(deathDelay);
+        onDeath.Invoke();
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("DeathZone"))

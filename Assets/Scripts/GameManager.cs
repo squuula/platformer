@@ -45,6 +45,16 @@ public class GameManager : MonoBehaviour
 
     void LoadNext()
     {
+        int currentIndex = SceneManager.GetActiveScene().buildIndex;
+        int unlocked = PlayerPrefs.GetInt("UnlockedLevel", 1);
+        // currentIndex - 1 потому что MainMenu занимает индекс 0
+        int currentLevel = currentIndex;
+        if (currentLevel >= unlocked)
+        {
+            PlayerPrefs.SetInt("UnlockedLevel", currentLevel + 1);
+            PlayerPrefs.Save();
+        }
+
         SceneManager.LoadScene(nextLevelScene);
     }
 }

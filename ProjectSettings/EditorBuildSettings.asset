@@ -5,8 +5,38 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/blocks/Scenes/MainMenu.unity
+    guid: 52b62de7c40fc443791864a799bf2aee
+  - enabled: 1
+    path: Assets/blocks/Scenes/level1.unity
+    guid: 5186bae3ae61f44cfa84eea4a983f34f
+  - enabled: 1
+    path: Assets/blocks/Scenes/level2.unity
+    guid: a9ba2df66bb5843e4a5534242252d38c
+  - enabled: 1
+    path: Assets/blocks/Scenes/level3.unity
+    guid: e41aaf3ac4b7c43da8ca1b13bee55ee1
+  - enabled: 1
+    path: Assets/blocks/Scenes/level4.unity
+    guid: 3adaa6ece7d334b51b24e5356f2f11a8
+  - enabled: 1
+    path: Assets/blocks/Scenes/level5.unity
+    guid: fcd4f4d21ee784e3e857909f8fb17131
+  - enabled: 1
+    path: Assets/blocks/Scenes/level6.unity
+    guid: 56f5085fc270c4b499236f2296e4010f
+  - enabled: 1
+    path: Assets/blocks/Scenes/level7.unity
+    guid: a65fd0c10ee634a8e805f2200a364076
+  - enabled: 1
+    path: Assets/blocks/Scenes/level8.unity
+    guid: fba96826ce17c4b35a33c8f7364c3cc1
+  - enabled: 1
+    path: Assets/blocks/Scenes/EndScreen.unity
+    guid: 076616559a48943a6ade004868bbe931
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
