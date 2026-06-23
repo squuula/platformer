@@ -1,101 +1,170 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using System.Collections;
 
-[RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class PlayerController : MonoBehaviour
 {
-    [Header("Movement")]
-    public float moveSpeed = 7f;
+    public float moveSpeed = 8f;
+    public float jumpForce = 12f;
+    public float deathTimer = 1f;
+    private float horizontalInput;
 
-    [Header("Jump")]
-    public float jumpForce = 14f;
-
-    [Header("Ground Check")]
     public Transform groundCheck;
-    public float groundCheckRadius = 0.15f;
     public LayerMask groundLayer;
+    public float checkRadius = 0.2f;
+    private bool isGrounded;
 
-    Rigidbody2D rb;
-    Animator anim;
-    bool isGrounded;
-    float horizontalInput;
-    bool facingRight = true;
-    bool jumpPressed;
-    bool isDead;
+    public int emeraldsCount = 0;
 
-    void Awake()
+    private Rigidbody2D rb;
+    private Animator anim;
+    private bool facingRight = true;
+    private bool isDead = false;
+    private int totalEmeraldsInLevel;
+
+    private Vector3 startPosition;
+    private SpriteRenderer sprite;
+
+    void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
+        sprite = GetComponent<SpriteRenderer>();
+
+        startPosition = transform.position;
+
+        PlayerPrefs.SetInt("TotalDeaths", 0);
+        PlayerPrefs.Save();
+
+        totalEmeraldsInLevel = GameObject.FindGameObjectsWithTag("Emerald").Length;
+        UIManager.Instance.UpdateEmeraldsUI(emeraldsCount, totalEmeraldsInLevel);
     }
 
-    public void OnMove(InputValue value)
+    public bool HasCollectedAllEmeralds()
     {
-        horizontalInput = value.Get<Vector2>().x;
+        return emeraldsCount >= totalEmeraldsInLevel;
     }
 
     void Update()
     {
         if (isDead) return;
 
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        horizontalInput = 0f;
 
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
-            jumpPressed = true;
+        if (Input.GetKey(KeybindManager.Instance.Keys["Left"]))
+        {
+            horizontalInput = -1f;
+        }
+        if (Input.GetKey(KeybindManager.Instance.Keys["Right"]))
+        {
+            horizontalInput = 1f;
+        }
 
-        HandleFlip();
-        HandleJump();
-        UpdateAnimator();
-        jumpPressed = false;
+        anim.SetFloat("speed", Mathf.Abs(horizontalInput));
+
+        if (Input.GetKeyDown(KeybindManager.Instance.Keys["Jump"]) && isGrounded)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        }
+
+        if (horizontalInput > 0 && !facingRight) Flip();
+        else if (horizontalInput < 0 && facingRight) Flip();
     }
 
     void FixedUpdate()
     {
-        if (isDead)
-        {
-            rb.linearVelocity = Vector2.zero;
-            return;
-        }
+        if (isDead) return;
+
         rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
+
+        if (groundCheck != null)
+        {
+            isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, groundLayer);
+        }
     }
 
-    void HandleJump()
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (jumpPressed && isGrounded)
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        if (collision.CompareTag("Emerald"))
+        {
+            emeraldsCount++;
+            UIManager.Instance.UpdateEmeraldsUI(emeraldsCount, totalEmeraldsInLevel);
+
+            collision.gameObject.SetActive(false);
+        }
+
+        if (collision.CompareTag("Trap") && !isDead)
+        {
+            StartCoroutine(DieRoutine());
+        }
     }
 
-    void UpdateAnimator()
-    {
-        anim.SetFloat("Speed", Mathf.Abs(horizontalInput));
-    }
-
-    public void PlayDeath()
+    IEnumerator DieRoutine()
     {
         isDead = true;
-        anim.SetBool("IsDead", true);
-    }
+        rb.linearVelocity = Vector2.zero;
+        rb.simulated = false;
 
-    void HandleFlip()
-    {
-        if (horizontalInput > 0 && !facingRight) Flip();
-        else if (horizontalInput < 0 && facingRight) Flip();
+        int savedDeaths = PlayerPrefs.GetInt("TotalDeaths", 0);
+        savedDeaths++;
+        PlayerPrefs.SetInt("TotalDeaths", savedDeaths);
+        PlayerPrefs.Save();
+
+        anim.SetTrigger("die");
+
+        yield return new WaitForSeconds(deathTimer);
+
+        ResetLevelObjects();
+
+        transform.position = startPosition;
+        rb.simulated = true;
+        if (sprite != null) sprite.enabled = true;
+        if (anim != null) anim.enabled = true;
+
+        anim.Rebind();
+        isDead = false;
     }
 
     void Flip()
     {
         facingRight = !facingRight;
-        Vector3 s = transform.localScale;
-        s.x *= -1;
-        transform.localScale = s;
+        Vector3 scaler = transform.localScale;
+        scaler.x *= -1;
+        transform.localScale = scaler;
     }
 
-    void OnDrawGizmosSelected()
+    private void OnDrawGizmosSelected()
     {
-        if (groundCheck)
+        if (groundCheck != null)
         {
-            Gizmos.color = isGrounded ? Color.green : Color.red;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(groundCheck.position, checkRadius);
+        }
+    }
+
+    void ResetLevelObjects()
+    {
+        emeraldsCount = 0;
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.UpdateEmeraldsUI(emeraldsCount, totalEmeraldsInLevel);
+        }
+
+        GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+        foreach (GameObject obj in allObjects)
+        {
+            if (obj.scene.name == gameObject.scene.name)
+            {
+                if (obj.CompareTag("Emerald"))
+                {
+                    obj.SetActive(true);
+                }
+
+                else if (obj.TryGetComponent<CrumblingPlatform>(out CrumblingPlatform platform))
+                {
+                    platform.ResetPlatform();
+                }
+            }
         }
     }
 }

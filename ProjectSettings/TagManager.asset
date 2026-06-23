@@ -4,19 +4,17 @@
 TagManager:
   serializedVersion: 3
   tags:
-  - Ground
-  - Wall
-  - DeathZone
+  - tag__emerald
+  - Emerald
+  - Trap
+  - Gravel
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - Player
+  - Ground
   - Water
   - UI
-  - Ground
-  - OneWay
-  - Wall
   - 
   - 
   - 
@@ -39,11 +37,13 @@ TagManager:
   - 
   - 
   - 
-  - bg
+  - 
+  - 
+  - 
+  - 
   m_SortingLayers:
   - name: Default
     uniqueID: 0
     locked: 0
   m_RenderingLayers:
   - Default
-  m_MigratedRenderPipelines: []
